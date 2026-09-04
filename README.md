@@ -1,3 +1,22 @@
+# Kanso Candidate Intelligence
+
+A focused candidate evaluation workspace built with Next.js, TypeScript, and a server-side n8n webhook proxy.
+
+## Run locally
+
+```bash
+npm install
+copy .env.example .env.local
+npm run dev
+```
+
+Set `N8N_WEBHOOK_URL` in `.env.local` when the workflow URL changes. The UI keeps a demo assessment visible if the workflow returns an error, so the interface remains usable while n8n is being configured.
+
+## Deploy
+
+Import this repository into Vercel and add `N8N_WEBHOOK_URL` under Project Settings > Environment Variables. Build command: `npm run build`.
+
+The endpoint is proxied through `/api/evaluate` to avoid browser CORS issues. The workflow should accept JSON candidate fields: `name`, `email`, `role`, `experience`, `skills`, and `notes`.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started

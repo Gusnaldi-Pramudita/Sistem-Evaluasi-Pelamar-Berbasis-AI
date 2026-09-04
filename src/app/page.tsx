@@ -1,69 +1,43 @@
-import Image from "next/image";
+"use client";
+
+import { FormEvent, useState } from "react";
+import { Activity, ArrowUpRight, BarChart3, Check, ChevronDown, CircleHelp, FileText, LayoutDashboard, LoaderCircle, Menu, Plus, Settings2, Sparkles, Target, Users, X } from "lucide-react";
+
+type Candidate = { name: string; email: string; role: string; experience: string; skills: string; notes: string };
+type Evaluation = { score: number; recommendation: string; summary: string; strengths: string[]; risks: string[] };
+const initialCandidate: Candidate = { name: "", email: "", role: "Senior Product Designer", experience: "", skills: "", notes: "" };
+const demoEvaluation: Evaluation = { score: 86, recommendation: "Strong match", summary: "A strategic product thinker with the craft and systems mindset to move complex product work forward.", strengths: ["Product strategy", "Systems thinking", "Cross-functional leadership"], risks: ["Limited B2B exposure"] };
+
+function normalizeEvaluation(value: unknown): Evaluation {
+  const data = (Array.isArray(value) ? value[0] : value) as Record<string, unknown> | null;
+  const score = Math.max(0, Math.min(100, Number.parseInt(String(data?.score ?? data?.overallScore ?? data?.matchScore ?? 0), 10) || 0));
+  const list = (item: unknown) => Array.isArray(item) ? item.map(String) : item ? [String(item)] : [];
+  return { score, recommendation: String(data?.recommendation ?? data?.verdict ?? (score >= 75 ? "Strong match" : "Needs review")), summary: String(data?.summary ?? data?.analysis ?? data?.reasoning ?? "Evaluation completed. Review the signals below before making a decision."), strengths: list(data?.strengths ?? data?.highlights), risks: list(data?.risks ?? data?.concerns ?? data?.weaknesses) };
+}
 
 export default function Home() {
-  return (
-    <div className="flex flex-col flex-1 items-center justify-center bg-zinc-50 font-sans dark:bg-black">
-      <main className="flex flex-1 w-full max-w-3xl flex-col items-center justify-between py-32 px-16 bg-white dark:bg-black sm:items-start">
-        <Image
-          className="dark:invert h-5 w-[100px]"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={100}
-          height={20}
-          priority
-        />
-        <div className="flex flex-col items-center gap-6 text-center sm:items-start sm:text-left">
-          <h1 className="max-w-xs text-3xl font-semibold leading-10 tracking-tight text-black dark:text-zinc-50">
-            To get started, edit the{" "}
-            <code className="rounded bg-black/[.06] px-1.5 py-0.5 font-mono text-[0.9em] dark:bg-white/[.08]">
-              page.tsx
-            </code>{" "}
-            file.
-          </h1>
-          <p className="max-w-md text-lg leading-8 text-zinc-600 dark:text-zinc-400">
-            Looking for a starting point or more instructions? Head over to{" "}
-            <a
-              href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Templates
-            </a>{" "}
-            or the{" "}
-            <a
-              href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-              className="font-medium text-zinc-950 dark:text-zinc-50"
-            >
-              Learning
-            </a>{" "}
-            center.
-          </p>
-        </div>
-        <div className="flex flex-col gap-4 text-base font-medium sm:flex-row">
-          <a
-            className="flex h-12 w-full items-center justify-center gap-2 rounded-full bg-foreground px-5 text-background transition-colors hover:bg-[#383838] dark:hover:bg-[#ccc] md:w-[158px]"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert h-[14px] w-4"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={16}
-              height={14}
-            />
-            Deploy Now
-          </a>
-          <a
-            className="flex h-12 w-full items-center justify-center rounded-full border border-solid border-black/[.08] px-5 transition-colors hover:border-transparent hover:bg-black/[.04] dark:border-white/[.145] dark:hover:bg-[#1a1a1a] md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Documentation
-          </a>
-        </div>
-      </main>
-    </div>
-  );
+  const [candidate, setCandidate] = useState(initialCandidate);
+  const [evaluation, setEvaluation] = useState<Evaluation | null>(demoEvaluation);
+  const [isEvaluating, setIsEvaluating] = useState(false);
+  const [notice, setNotice] = useState("Demo result loaded");
+  const [mobileNav, setMobileNav] = useState(false);
+  const update = (field: keyof Candidate, value: string) => setCandidate((current) => ({ ...current, [field]: value }));
+  async function evaluate(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault(); setIsEvaluating(true); setNotice("Sending to AI workflow...");
+    try { const response = await fetch("/api/evaluate", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(candidate) }); if (!response.ok) throw new Error("Webhook unavailable"); setEvaluation(normalizeEvaluation(await response.json())); setNotice("Evaluation synced just now"); }
+    catch { setEvaluation(demoEvaluation); setNotice("Showing demo result · check n8n workflow"); }
+    finally { setIsEvaluating(false); }
+  }
+  return <main className="app-shell"><aside className={`sidebar ${mobileNav ? "is-open" : ""}`}>
+    <div className="brand"><span className="brand-mark">間</span><span>Kanso<span className="brand-dot">.</span></span></div><div className="workspace-switcher"><div><small>WORKSPACE</small><strong>Atelier hiring</strong></div><ChevronDown size={15} /></div>
+    <nav className="main-nav"><span className="nav-label">Workspace</span><a className="nav-item active" href="#overview"><LayoutDashboard size={17} /> Overview</a><a className="nav-item" href="#candidates"><Users size={17} /> Candidates <b>12</b></a><a className="nav-item" href="#analytics"><BarChart3 size={17} /> Analytics</a><span className="nav-label second">Manage</span><a className="nav-item" href="#templates"><FileText size={17} /> Templates</a><a className="nav-item" href="#settings"><Settings2 size={17} /> Settings</a></nav>
+    <div className="sidebar-bottom"><div className="connection"><span className="status-dot" /><span><small>AI ENGINE</small><strong>n8n connected</strong></span><Activity size={15} /></div><div className="user-row"><span className="avatar">RA</span><span><strong>Rina Aoki</strong><small>Owner</small></span><span className="more-dots">•••</span></div></div>
+  </aside>{mobileNav && <button className="nav-backdrop" onClick={() => setMobileNav(false)} aria-label="Close navigation"><X /></button>}
+  <section className="content"><header className="topbar"><button className="icon-button menu-button" onClick={() => setMobileNav(true)} aria-label="Open navigation"><Menu size={19} /></button><div className="breadcrumbs"><span>Overview</span><span>/</span><strong>New evaluation</strong></div><div className="top-actions"><button className="icon-button" aria-label="Help"><CircleHelp size={19} /></button><button className="profile-button"><span className="avatar small">RA</span><ChevronDown size={15} /></button></div></header>
+    <div className="page-wrap"><div className="page-heading"><div><div className="eyebrow"><span className="eyebrow-line" /> Candidate intelligence</div><h1>Make every hire<br /><em>intentional.</em></h1><p>Evaluate potential with clarity, context, and a little more human judgment.</p></div><div className="heading-meta"><span className="live-pulse" /> Workflow live<span className="meta-divider" />Sep 04, 2026</div></div>
+      <div className="workspace-grid"><section className="form-panel" id="candidates"><div className="panel-top"><div><span className="step-label">01 <span>/</span> Candidate profile</span><h2>Who are we meeting?</h2></div><button className="ghost-button"><Plus size={15} /> Save template</button></div><form onSubmit={evaluate}><div className="field-grid"><Field label="Full name" placeholder="e.g. Hana Mori" value={candidate.name} onChange={(value) => update("name", value)} /><Field label="Email address" placeholder="hana@studio.com" type="email" value={candidate.email} onChange={(value) => update("email", value)} /></div><Field label="Applying for" value={candidate.role} onChange={(value) => update("role", value)} select /><div className="field-grid"><Field label="Years of experience" placeholder="e.g. 6" value={candidate.experience} onChange={(value) => update("experience", value)} /><Field label="Key skills" placeholder="Product, Figma, Research..." value={candidate.skills} onChange={(value) => update("skills", value)} /></div><label className="field-label">Context <span>Optional</span><textarea value={candidate.notes} onChange={(event) => update("notes", event.target.value)} placeholder="Add interview notes, portfolio context, or anything the AI should consider..." /></label><div className="form-footer"><span><Sparkles size={15} /> AI analysis takes about 10 seconds</span><button className="primary-button" type="submit" disabled={isEvaluating}>{isEvaluating ? <LoaderCircle className="spin" size={16} /> : <Target size={16} />}{isEvaluating ? "Evaluating..." : "Run evaluation"}<ArrowUpRight size={16} /></button></div></form></section>
+        <section className="result-panel" id="overview"><div className="result-top"><div><span className="step-label">02 <span>/</span> AI assessment</span><h2>The signal, distilled.</h2></div><span className="result-status"><span className="status-dot" /> {notice}</span></div>{evaluation && <div className="result-body"><div className="score-row"><div className="score-ring" style={{ "--score": `${evaluation.score * 3.6}deg` } as React.CSSProperties}><strong>{evaluation.score}</strong><span>/ 100</span></div><div className="recommendation"><span>RECOMMENDATION</span><h3>{evaluation.recommendation}</h3><p>Based on profile fit and role requirements</p></div></div><div className="summary-block"><span className="mini-label">EXECUTIVE READ</span><p>{evaluation.summary}</p></div><div className="signal-grid"><Signal title="Strengths" items={evaluation.strengths.length ? evaluation.strengths : ["Add candidate data to generate signals"]} tone="positive" /><Signal title="Watch for" items={evaluation.risks.length ? evaluation.risks : ["No risks flagged"]} tone="caution" /></div><div className="result-action"><span><Check size={15} /> Ready for your review</span><button className="text-button">View full report <ArrowUpRight size={15} /></button></div></div>}</section></div>
+      <div className="bottom-note"><span className="japanese-note">静かに、正確に</span><span>Quietly, precisely. Better decisions start here.</span></div></div></section></main>;
 }
+function Field({ label, placeholder, value, onChange, type = "text", select = false }: { label: string; placeholder?: string; value: string; onChange: (value: string) => void; type?: string; select?: boolean }) { return <label className="field-label">{label}<div className={`input-wrap ${select ? "select-wrap" : ""}`}><input type={type} value={value} onChange={(event) => onChange(event.target.value)} placeholder={placeholder} />{select && <ChevronDown size={16} />}</div></label>; }
+function Signal({ title, items, tone }: { title: string; items: string[]; tone: "positive" | "caution" }) { return <div className={`signal ${tone}`}><span className="mini-label">{title}</span>{items.map((item) => <div className="signal-item" key={item}><span className="signal-icon">{tone === "positive" ? <Check size={12} /> : "–"}</span>{item}</div>)}</div>; }
