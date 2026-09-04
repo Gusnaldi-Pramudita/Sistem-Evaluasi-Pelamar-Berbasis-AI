@@ -1,6 +1,8 @@
-# Kanso Candidate Intelligence
+# Kanso | Sistem Evaluasi Pelamar
 
-A focused candidate evaluation workspace built with Next.js, TypeScript, and a server-side n8n webhook proxy.
+Workspace evaluasi pelamar berbasis Next.js, TypeScript, dan proxy webhook n8n.
+
+Login awal: `admin` / `admin`.
 
 ## Run locally
 
@@ -10,13 +12,19 @@ copy .env.example .env.local
 npm run dev
 ```
 
-Set `N8N_WEBHOOK_URL` in `.env.local` when the workflow URL changes. The UI keeps a demo assessment visible if the workflow returns an error, so the interface remains usable while n8n is being configured.
+Set `N8N_WEBHOOK_URL` di `.env.local` bila URL workflow berubah. Login ini adalah gate aplikasi sederhana; untuk produksi, ganti dengan autentikasi database atau penyedia identitas.
 
 ## Deploy
 
 Import this repository into Vercel and add `N8N_WEBHOOK_URL` under Project Settings > Environment Variables. Build command: `npm run build`.
 
-The endpoint is proxied through `/api/evaluate` to avoid browser CORS issues. The workflow should accept JSON candidate fields: `name`, `email`, `role`, `experience`, `skills`, and `notes`.
+Endpoint diproxy melalui `/api/evaluate` untuk menghindari CORS. Workflow n8n menerima JSON berikut:
+
+- Data opsional: `name`, `email`, `experience`, `skills`, `notes`
+- Posisi: `role` dan `posisiDilamar`
+- CV: `cvFileName`, `cvMimeType`, `cvBase64`
+
+Di n8n, decode `cvBase64` menjadi binary PDF sebelum node ekstraksi teks atau AI. Upload dibatasi 4 MB agar kompatibel dengan batas request serverless Vercel.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
