@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const webhookUrl = process.env.N8N_WEBHOOK_URL ?? "https://guzmann.app.n8n.cloud/webhook/multi-ai";
+const webhookUrl = process.env.N8N_WEBHOOK_URL ?? "https://xirenzit.app.n8n.cloud/webhook/cv-analysis";
 
 export async function POST(request: Request) {
   try {
