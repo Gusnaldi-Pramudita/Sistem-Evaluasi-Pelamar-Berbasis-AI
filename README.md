@@ -18,13 +18,15 @@ Set `N8N_WEBHOOK_URL` di `.env.local` bila URL workflow berubah. Login ini adala
 
 Import this repository into Vercel and add `N8N_WEBHOOK_URL` under Project Settings > Environment Variables. Build command: `npm run build`.
 
-Endpoint diproxy melalui `/api/evaluate` untuk menghindari CORS. Workflow n8n menerima JSON berikut:
+Endpoint diproxy melalui `/api/evaluate` untuk menghindari CORS. Pengguna dapat memilih beberapa PDF sekaligus atau membaca PDF dari satu folder. Setiap PDF dikirim ke workflow dan dievaluasi secara terpisah, berurutan, lalu muncul sebagai kandidat tersendiri di daftar. Ukuran total file yang dipilih dibatasi 4 MB per antrean. Pemilihan folder memerlukan dukungan folder upload pada browser (misalnya Chromium).
+
+Workflow n8n menerima satu JSON untuk setiap CV:
 
 - Data opsional: `name`, `email`, `experience`, `skills`, `notes`
 - Posisi: `role` dan `posisiDilamar`
-- CV: `cvFileName`, `cvMimeType`, `cvBase64`
+- CV: `cvFileName`, `cvMimeType`, dan `cvBase64`
 
-Di n8n, decode `cvBase64` menjadi binary PDF sebelum node ekstraksi teks atau AI. Upload dibatasi 4 MB agar kompatibel dengan batas request serverless Vercel.
+Di n8n, decode `cvBase64` menjadi binary PDF sebelum node ekstraksi teks atau AI, kemudian kembalikan hasil evaluasi untuk CV tersebut. Upload dikirim ke endpoint aplikasi sebagai multipart agar ukuran file tidak membengkak sebelum diteruskan ke n8n. Dashboard juga menyediakan lima kandidat dummy sebagai contoh; data tersebut hanya tersimpan di frontend dan bukan data kandidat nyata.
 This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
 
 ## Getting Started
